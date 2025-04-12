@@ -1,11 +1,11 @@
 --[[ 
   Script: Graupner Servo Converter
   Author: luftruepel
-  Date: 9.4.2025
+  Date: 12.4.2025
 
   TODO:
-    - "Ignore" button next to the "Apply" button
-    - Other languages
+    - Centering of End-Message
+    - Add support for other languages
 ]]
 
 local reqEthosVersion="1.6.2"
@@ -219,15 +219,15 @@ local function create()
     tmpField:default(GraupnerTravelPlus*10)
 
     local tmpLine = form.addLine("", nil, false)
-    form.addTextButton(tmpLine, nil, "Übernehmen", function()
-        handleChannelAction(true)
-    end)
+    local tmpSlots = form.getFieldSlots(tmpLine, {0, 0})
 
-    local tmpLine = form.addLine("", nil, false)
-    form.addTextButton(tmpLine, nil, "Kanal ignorieren", function()
+    form.addTextButton(tmpLine, tmpSlots[1], "Kanal ignorieren", function()
         handleChannelAction(false)
     end)
 
+    form.addTextButton(tmpLine, tmpSlots[2], "Übernehmen", function()
+        handleChannelAction(true)
+    end)
 
     return {}
 end
