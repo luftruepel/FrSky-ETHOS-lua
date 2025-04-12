@@ -31,6 +31,24 @@ local GraupnerTrim
 local GraupnerTravelPlus
 local GraupnerTravelMinus
 
+function addStaticTextCentered(line, rect, text, font)
+
+    font = font or FONT_STD
+
+    local tmpFont = lcd.font()
+
+    lcd.font(font)
+
+    local x = math.floor(rect.x + (rect.w  - lcd.getTextSize(text))/2)
+
+    lcd.font(tmpFont)
+
+    form.addStaticText(line, {x = x,
+                              y = rect.y,
+                              w = rect.w,
+                              h = rect.h}, text)
+end
+
 function getLineSlots(line, n, space, margin_left, margin_right)
 
     if n < 1 then
@@ -48,8 +66,6 @@ function getLineSlots(line, n, space, margin_left, margin_right)
     space = space or Slots[2].x - (Slots[1].x + Slots[1].w)
 
     w = (w - margin_left - margin_right - (n-1)*space)/n
-
-    print ("margin_left=" .. margin_left)
 
     Slots = {Slots[1]}
 
@@ -269,10 +285,10 @@ local function create()
         local tmpLine = form.addLine(" ", nil, false)
         local tmpSlots = getLineSlots(tmpLine, 4)
 
-        form.addStaticText(tmpLine, tmpSlots[1], "Richtung")
-        form.addStaticText(tmpLine, tmpSlots[2], "Mitte")
-        form.addStaticText(tmpLine, tmpSlots[3], "Weg -")
-        form.addStaticText(tmpLine, tmpSlots[4], "Weg +")
+        addStaticTextCentered(tmpLine, tmpSlots[1], "Richtung")
+        addStaticTextCentered(tmpLine, tmpSlots[2], "Mitte")
+        addStaticTextCentered(tmpLine, tmpSlots[3], "Weg -")
+        addStaticTextCentered(tmpLine, tmpSlots[4], "Weg +")
 
         local tmpLine = form.addLine(" ", nil, true)
 
