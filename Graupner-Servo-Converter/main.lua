@@ -31,6 +31,41 @@ local GraupnerTrim
 local GraupnerTravelPlus
 local GraupnerTravelMinus
 
+function getLineSlots(line, n, space, margin_left, margin_right)
+
+    if n < 1 then
+        return {}
+    end
+
+    local w, h = lcd.getWindowSize()
+
+    local Slots = form.getFieldSlots(line, {0, 0})
+
+    margin_left = margin_left or 0
+
+    margin_right = margin_right or w - (Slots[2].x + Slots[2].w)
+
+    space = space or Slots[2].x - (Slots[1].x + Slots[1].w)
+
+    w = (w - margin_left - margin_right - (n-1)*space)/n
+
+    print ("margin_left=" .. margin_left)
+
+    Slots = {Slots[1]}
+
+    Slots[1].w = math.floor(w)
+    Slots[1].x = margin_left
+
+    for i = 2, n do
+        table.insert(Slots, {x = math.floor(Slots[i-1].x + Slots[i-1].w + space),
+                             y = Slots[1].y,
+                             w = Slots[1].w,
+                             h = Slots[1].h})
+    end
+
+    return Slots
+end
+
 function round(x, n)
     n = n or 0
     local factor = 10 ^ n
@@ -197,37 +232,78 @@ local function create()
 
     tmpLine = form.addLine("Graupner Servoeinstellungen", nil, false)
 
-    tmpLine = form.addLine("     Richtung", nil, false)
-    form.addChoiceField(tmpLine, nil, {{"=>", 1}, {"<=", 0}}, function() return GraupnerDirection end, function(value) GraupnerDirection = value end)
+    if (false) then
+        tmpLine = form.addLine("     Richtung", nil, false)
+        form.addChoiceField(tmpLine, nil, {{"=>", 1}, {"<=", 0}}, function() return GraupnerDirection end, function(value) GraupnerDirection = value end)
 
-    tmpLine = form.addLine("     Mitte", nil, false)
-    local tmpField = form.addNumberField(tmpLine, nil, -1500, 1500, function() return GraupnerTrim*10 end, function(value) GraupnerTrim = value/10 end)
-    tmpField:decimals(1)
-    tmpField:suffix("%")
-    tmpField:default(GraupnerTrim*10)
+        tmpLine = form.addLine("     Mitte", nil, false)
+        local tmpField = form.addNumberField(tmpLine, nil, -1500, 1500, function() return GraupnerTrim*10 end, function(value) GraupnerTrim = value/10 end)
+        tmpField:decimals(1)
+        tmpField:suffix("%")
+        tmpField:default(GraupnerTrim*10)
 
-    tmpLine = form.addLine("     Weg -", nil, false)
-    tmpField = form.addNumberField(tmpLine, nil, 0, 1500, function() return GraupnerTravelMinus*10 end, function(value) GraupnerTravelMinus = value/10 end)
-    tmpField:decimals(1)
-    tmpField:suffix("%")
-    tmpField:default(GraupnerTravelMinus*10)   
+        tmpLine = form.addLine("     Weg -", nil, false)
+        tmpField = form.addNumberField(tmpLine, nil, 0, 1500, function() return GraupnerTravelMinus*10 end, function(value) GraupnerTravelMinus = value/10 end)
+        tmpField:decimals(1)
+        tmpField:suffix("%")
+        tmpField:default(GraupnerTravelMinus*10)   
 
-    tmpLine = form.addLine("     Weg +", nil, true)
-    tmpField = form.addNumberField(tmpLine, nil, 0, 1500, function() return GraupnerTravelPlus*10 end, function(value) GraupnerTravelPlus = value/10 end)
-    tmpField:decimals(1)
-    tmpField:suffix("%")
-    tmpField:default(GraupnerTravelPlus*10)
+        tmpLine = form.addLine("     Weg +", nil, true)
+        tmpField = form.addNumberField(tmpLine, nil, 0, 1500, function() return GraupnerTravelPlus*10 end, function(value) GraupnerTravelPlus = value/10 end)
+        tmpField:decimals(1)
+        tmpField:suffix("%")
+        tmpField:default(GraupnerTravelPlus*10)
 
-    local tmpLine = form.addLine("", nil, false)
-    local tmpSlots = form.getFieldSlots(tmpLine, {0, 0})
+        local tmpLine = form.addLine("", nil, false)
+        local tmpSlots = form.getFieldSlots(tmpLine, {0, 0})
 
-    form.addTextButton(tmpLine, tmpSlots[1], "Kanal ignorieren", function()
-        handleChannelAction(false)
-    end)
+        form.addTextButton(tmpLine, tmpSlots[1], "Kanal ignorieren", function()
+            handleChannelAction(false)
+        end)
 
-    form.addTextButton(tmpLine, tmpSlots[2], "Übernehmen", function()
-        handleChannelAction(true)
-    end)
+        form.addTextButton(tmpLine, tmpSlots[2], "Übernehmen", function()
+            handleChannelAction(true)
+        end)
+
+    else
+        local tmpLine = form.addLine(" ", nil, false)
+        local tmpSlots = getLineSlots(tmpLine, 4)
+
+        form.addStaticText(tmpLine, tmpSlots[1], "Richtung")
+        form.addStaticText(tmpLine, tmpSlots[2], "Mitte")
+        form.addStaticText(tmpLine, tmpSlots[3], "Weg -")
+        form.addStaticText(tmpLine, tmpSlots[4], "Weg +")
+
+        local tmpLine = form.addLine(" ", nil, true)
+
+        form.addChoiceField(tmpLine, tmpSlots[1], {{"=>", 1}, {"<=", 0}}, function() return GraupnerDirection end, function(value) GraupnerDirection = value end)
+
+        local tmpField = form.addNumberField(tmpLine, tmpSlots[2], -1500, 1500, function() return GraupnerTrim*10 end, function(value) GraupnerTrim = value/10 end)
+        tmpField:decimals(1)
+        tmpField:suffix("%")
+        tmpField:default(GraupnerTrim*10)
+
+        tmpField = form.addNumberField(tmpLine, tmpSlots[3], 0, 1500, function() return GraupnerTravelMinus*10 end, function(value) GraupnerTravelMinus = value/10 end)
+        tmpField:decimals(1)
+        tmpField:suffix("%")
+        tmpField:default(GraupnerTravelMinus*10)   
+
+        tmpField = form.addNumberField(tmpLine, tmpSlots[4], 0, 1500, function() return GraupnerTravelPlus*10 end, function(value) GraupnerTravelPlus = value/10 end)
+        tmpField:decimals(1)
+        tmpField:suffix("%")
+        tmpField:default(GraupnerTravelPlus*10)
+
+        local tmpLine = form.addLine("", nil, false)
+        local tmpSlots = getLineSlots(tmpLine, 2)
+
+        form.addTextButton(tmpLine, tmpSlots[1], "Kanal ignorieren", function()
+            handleChannelAction(false)
+        end)
+
+        form.addTextButton(tmpLine, tmpSlots[2], "Übernehmen", function()
+            handleChannelAction(true)
+        end)
+    end
 
     return {}
 end
