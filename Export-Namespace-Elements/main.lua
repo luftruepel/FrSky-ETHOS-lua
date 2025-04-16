@@ -43,11 +43,16 @@ local file = io.open("./namespace_elements.txt", "w")
 for ns_name, ns_value in pairs(_G) do
     if type(ns_value) == "table" then
         for key, val in pairs(ns_value) do
-            local line = string.format("%s.%s, %s\n", ns_name, tostring(key), type(val))
+            local val_type = type(val)
+            local line
+            if val_type == "number" then
+                line = string.format("%s.%s, %s, %s\n", ns_name, tostring(key), val_type, tostring(val))
+            else
+                line = string.format("%s.%s, %s\n", ns_name, tostring(key), val_type)
+            end
             file:write(line)
         end
     end
 end
 
 file:close()
-
