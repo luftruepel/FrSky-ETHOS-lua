@@ -3,11 +3,14 @@
   Author: luftruepel
   Date: 15.4.2025
 
-  Description: Remaps the output of a selected input source to a custom range (e.g. -50% to 100%).
+  Description: 
+    Remaps the output of a selected input source to a custom range (e.g. -50% to 100%). 
+
+  Important Note: 
+    This script does not work when using decimal values if the source is used directly in a mixer — in that case, you must route the source through VARS. The reason is that mixers operate on the rawValue, which differs from the value used by VARS. Specifically, rawValue is larger than value by a factor of 10^n, where n is the number of decimal places.
 
   TODO:
     - Translations: Quelle, Wertebereich
-    - decimals(1)
 ]]
 
 local name = "ReRange"
@@ -18,9 +21,14 @@ local MAX_DEFAULT = 100
 local MIN_RANGE = -100
 local MAX_RANGE = 100
 
+local DECIMALS_DEFAULT = 1
+local DECIMALS_MIN = 0
+local DECIMALS_MAX = 2
+
 local inputSource
 local min
 local max
+local decimals
 local a
 local b
 
@@ -41,8 +49,10 @@ local function sourceInit(source)
   inputSource = nil
   min = MIN_DEFAULT
   max = MAX_DEFAULT
+  decimals = DECIMALS_DEFAULT
 
   source:unit(UNIT_PERCENT)
+  source:decimals(decimals)
 end
 
 local function sourceWakeup(source)
@@ -56,6 +66,12 @@ local function sourceRead(source)
   tmpValue = storage.read("max")
   if tmpValue ~= nil then max = tmpValue end
 
+  tmpValue = storage.read("decimals")
+  if tmpValue ~= nil then 
+    decimals = tmpValue 
+    source:decimals(decimals)
+  end
+
   tmpValue = storage.read("SourceName")
   if tmpValue ~= nil then inputSource = system.getSource(tmpValue) calcCoefficients() end
 end
@@ -63,6 +79,7 @@ end
 local function sourceWrite(source)
   storage.write("min", min)
   storage.write("max", max)
+  storage.write("decimals", decimals)
   if inputSource ~= nil then storage.write("SourceName", inputSource:name()) end
 end
 
@@ -82,6 +99,10 @@ local function sourceConfigure(source)
   tmpField = form.addNumberField(tmpLine, tmpSlots[3], MIN_RANGE, MAX_RANGE, function() return max end, function(value) max = value calcCoefficients() end)
   tmpField:suffix("%")
   tmpField:default(MAX_DEFAULT)
+
+  local tmpLine = form.addLine("Dezimalstellen", nil, false)
+  tmpField = form.addNumberField(tmpLine, nil, DECIMALS_MIN, DECIMALS_MAX, function() return decimals end, function(value) decimals = value source:decimals(decimals) end)
+  tmpField:default(DECIMALS_DEFAULT)
 end
 
 local function init()
